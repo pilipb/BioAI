@@ -33,24 +33,27 @@ class AntColony:
         
         np.fill_diagonal(self.visibility, 0)
         self.best_path = []
-        self.best_path_length = np.inf
+        self.best_path_length_weight = np.inf
+        self.best_path_length_distance = np.inf
 
     def find_path(self):
         for iter in range(self.max_iter):
             print(f"Iteration {iter}")
             all_paths = self.generate_paths()
             self.update_pheromone(all_paths)
-            shortest_path = min(all_paths, key=lambda x: x[1])
-            if shortest_path[1] < self.best_path_length:
-                self.best_path_length = shortest_path[1]
+            shortest_path = min(all_paths, key=lambda x: x[1][0])  # Based on weight
+            if shortest_path[1][0] < self.best_path_length_weight:
+                self.best_path_length_weight = shortest_path[1][0]
                 self.best_path = shortest_path[0]
-            print(f"Iteration {iter}: Best path length = {self.best_path_length}")
+                self.best_path_length_distance = shortest_path[1][1]  # Actual distance
+            print(f"Iteration {iter}: Best path length based on weight = {self.best_path_length_weight}")
+            print(f"Iteration {iter}: Best path length based on distance = {self.best_path_length_distance}")
 
             # Check if all ants have reached the end node
             if all(ant_path[-1] == self.end_node for ant_path, _ in all_paths):
                 break
 
-        return self.best_path, self.best_path_length
+        return self.best_path, self.best_path_length_weight
 
     def generate_paths(self):
         all_paths = []
@@ -58,17 +61,19 @@ class AntColony:
             current_node = self.start_node
             visited_nodes = [current_node]
             path = [current_node]
-            path_length = 0
+            path_length_weight = 0
+            path_length_distance = 0
             while current_node != self.end_node:
                 next_node = self.choose_next_node(current_node, visited_nodes)
-                path_length += self.graph[current_node // self.graph.shape[1], current_node % self.graph.shape[1]]
+                path_length_weight += self.graph[current_node // self.graph.shape[1], current_node % self.graph.shape[1]]
+                path_length_distance += self.distance[current_node][next_node]
                 visited_nodes.append(next_node)
                 path.append(next_node)
                 current_node = next_node
                 if len(visited_nodes) == self.num_nodes:
                     break  # break if all nodes are visited
-            path_length += self.graph[current_node // self.graph.shape[1], current_node % self.graph.shape[1]]
-            all_paths.append((path, path_length))
+            path_length_weight += self.graph[current_node // self.graph.shape[1], current_node % self.graph.shape[1]]
+            all_paths.append((path, (path_length_weight, path_length_distance)))
         return all_paths
 
     def choose_next_node(self, current_node, visited_nodes):
@@ -109,21 +114,21 @@ class AntColony:
         self.pheromone *= (1 - self.rho)
         
         # Pheromone update
-        for path, path_length in all_paths:
+        for path, (path_length_weight, _) in all_paths:
             for i in range(len(path) - 1):
-                self.pheromone[path[i]][path[i + 1]] += self.q / path_length
-            self.pheromone[path[-1]][path[0]] += self.q / path_length
+                self.pheromone[path[i]][path[i + 1]] += self.q / path_length_weight
+            self.pheromone[path[-1]][path[0]] += self.q / path_length_weight
 
 
 # Define the custom graph (grid)
 graph = np.array([
-    [3, 2, 3, 4, 5, 2, 3],
-    [2, 3, 1, 4, 2, 3, 2],
-    [3, 1, 3, 5, 3, 4, 2],
-    [4, 4, 5, 3, 4, 2, 3],
-    [5, 2, 3, 4, 3, 3, 4],
-    [2, 3, 4, 2, 3, 2, 3],
-    [3, 2, 3, 3, 4, 3, 2]
+    [3, 1, 1, 4, 5, 2, 3],
+    [1, 3, 1, 4, 2, 3, 4],
+    [1, 1, 3, 1, 3, 1, 2],
+    [4, 1, 5, 3, 1, 2, 1],
+    [5, 2, 1, 4, 3, 1, 5],
+    [1, 2, 3, 1, 2, 1, 4],
+    [2, 3, 4, 5, 1, 1, 1]
 ])
 
 # Start and end nodes
@@ -131,8 +136,8 @@ start_node = 0
 end_node = 48
 
 # Initialize and run the Ant Colony Optimization algorithm
-ant_colony = AntColony(num_ants=100, graph=graph, start_node=start_node, end_node=end_node)
-best_path, best_path_length = ant_colony.find_path()
+ant_colony = AntColony(num_ants=1000, graph=graph, start_node=start_node, end_node=end_node)
+best_path, best_path_length_weight = ant_colony.find_path()
 
 # Plotting the graph
 plt.figure(figsize=(10, 10))
@@ -148,5 +153,5 @@ plt.grid(visible=True)
 plt.show()
 
 print(f"Optimal path: {best_path}")
-print(f"Optimal path length: {best_path_length}")
-    
+print(f"Optimal path length based on weights: {best_path_length_weight}")
+print(f"Optimal path length based on distance: {ant_colony.best_path_length_distance}")
