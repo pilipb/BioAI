@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class AntColony:
-    def __init__(self, num_ants, graph, start_node, end_node, alpha=1, beta=2, rho=0.5, q=100, max_iter=100):
+    def __init__(self, num_ants, graph, start_node, end_node, alpha=0.5, beta=2, rho=0.5, q=100, max_iter=100, stop_percentage=0.5):
         self.num_ants = num_ants
         self.graph = graph
         self.num_nodes = graph.shape[0] * graph.shape[1]
@@ -13,6 +13,7 @@ class AntColony:
         self.rho = rho
         self.q = q
         self.max_iter = max_iter
+        self.stop_percentage = stop_percentage
         self.pheromone = np.ones((self.num_nodes, self.num_nodes))
         self.visibility = np.zeros((self.num_nodes, self.num_nodes))
         
@@ -49,8 +50,8 @@ class AntColony:
             print(f"Iteration {iter}: Best path length based on weight = {self.best_path_length_weight}")
             print(f"Iteration {iter}: Best path length based on distance = {self.best_path_length_distance}")
 
-            # Check if all ants have reached the end node
-            if all(ant_path[-1] == self.end_node for ant_path, _ in all_paths):
+            # Check if specified percentage of all ants have found the optimal path
+            if sum(ant_path == self.best_path for ant_path, _ in all_paths) >= self.stop_percentage * self.num_ants:
                 break
 
         return self.best_path, self.best_path_length_weight
@@ -122,13 +123,13 @@ class AntColony:
 
 # Define the custom graph (grid)
 graph = np.array([
-    [3, 1, 1, 4, 5, 2, 3],
+    [3, 2, 3, 4, 5, 2, 3],
     [1, 3, 1, 4, 2, 3, 4],
-    [1, 1, 3, 1, 3, 1, 2],
-    [4, 1, 5, 3, 1, 2, 1],
-    [5, 2, 1, 4, 3, 1, 5],
-    [1, 2, 3, 1, 2, 1, 4],
-    [2, 3, 4, 5, 1, 1, 1]
+    [3, 1, 3, 5, 3, 1, 2],
+    [4, 1, 5, 3, 4, 2, 1],
+    [5, 2, 1, 4, 3, 4, 5],
+    [1, 2, 3, 1, 2, 3, 4],
+    [2, 3, 4, 5, 1, 2, 1]
 ])
 
 # Start and end nodes
@@ -136,7 +137,7 @@ start_node = 0
 end_node = 48
 
 # Initialize and run the Ant Colony Optimization algorithm
-ant_colony = AntColony(num_ants=1000, graph=graph, start_node=start_node, end_node=end_node)
+ant_colony = AntColony(num_ants=1000, graph=graph, start_node=start_node, end_node=end_node, alpha=0.5, beta=2, rho=0.5, q=100, max_iter=100, stop_percentage=0.5)
 best_path, best_path_length_weight = ant_colony.find_path()
 
 # Plotting the graph
