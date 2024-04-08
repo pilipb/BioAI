@@ -17,7 +17,7 @@ class AntColony:
         self.visibility = np.zeros((self.num_nodes, self.num_nodes))
         
         # Calculate the distance between nodes using their coordinates
-        coordinates = [(i // 5, i % 5) for i in range(self.num_nodes)]
+        coordinates = [(i // graph.shape[1], i % graph.shape[1]) for i in range(self.num_nodes)]
         self.distance = np.zeros((self.num_nodes, self.num_nodes))
         for i in range(self.num_nodes):
             for j in range(self.num_nodes):
@@ -61,27 +61,27 @@ class AntColony:
             path_length = 0
             while current_node != self.end_node:
                 next_node = self.choose_next_node(current_node, visited_nodes)
-                path_length += self.graph[current_node // 5, current_node % 5]
+                path_length += self.graph[current_node // self.graph.shape[1], current_node % self.graph.shape[1]]
                 visited_nodes.append(next_node)
                 path.append(next_node)
                 current_node = next_node
                 if len(visited_nodes) == self.num_nodes:
                     break  # break if all nodes are visited
-            path_length += self.graph[current_node // 5, current_node % 5]
+            path_length += self.graph[current_node // self.graph.shape[1], current_node % self.graph.shape[1]]
             all_paths.append((path, path_length))
         return all_paths
 
     def choose_next_node(self, current_node, visited_nodes):
-        row, col = current_node // 5, current_node % 5
+        row, col = current_node // self.graph.shape[1], current_node % self.graph.shape[1]
         neighbors = [(row-1, col-1), (row-1, col), (row-1, col+1),
                      (row, col-1),                 (row, col+1),
                      (row+1, col-1), (row+1, col), (row+1, col+1)]
-        valid_neighbors = [(r, c) for r, c in neighbors if 0 <= r < 5 and 0 <= c < 5 and (r*5+c) not in visited_nodes]
+        valid_neighbors = [(r, c) for r, c in neighbors if 0 <= r < self.graph.shape[0] and 0 <= c < self.graph.shape[1] and (r*self.graph.shape[1]+c) not in visited_nodes]
         
         probabilities = []
         total_probability = 0
         for r, c in valid_neighbors:
-            node = r*5 + c
+            node = r*self.graph.shape[1] + c
             if node not in visited_nodes:
                 pheromone = self.pheromone[current_node][node] ** self.alpha
                 visibility = self.visibility[current_node][node] ** self.beta
@@ -117,29 +117,31 @@ class AntColony:
 
 # Define the custom graph (grid)
 graph = np.array([
-    [3, 2, 3, 4, 5],
-    [2, 3, 1, 4, 2],
-    [3, 1, 5, 5, 3],
-    [4, 4, 5, 3, 4],
-    [5, 2, 3, 4, 3]
+    [3, 2, 3, 4, 5, 2, 3],
+    [2, 3, 1, 4, 2, 3, 2],
+    [3, 1, 3, 5, 3, 4, 2],
+    [4, 4, 5, 3, 4, 2, 3],
+    [5, 2, 3, 4, 3, 3, 4],
+    [2, 3, 4, 2, 3, 2, 3],
+    [3, 2, 3, 3, 4, 3, 2]
 ])
 
 # Start and end nodes
 start_node = 0
-end_node = 15
+end_node = 48
 
 # Initialize and run the Ant Colony Optimization algorithm
 ant_colony = AntColony(num_ants=100, graph=graph, start_node=start_node, end_node=end_node)
 best_path, best_path_length = ant_colony.find_path()
 
 # Plotting the graph
-plt.figure(figsize=(8, 8))
+plt.figure(figsize=(10, 10))
 plt.imshow(graph, cmap='Blues')
-for i in range(5):
-    for j in range(5):
-        plt.text(j, i, str(graph[i, j]), color='blue', ha='center', va='center', fontsize=12)
+for i in range(graph.shape[0]):
+    for j in range(graph.shape[1]):
+        plt.text(j, i, str(graph[i, j]), color='blue', ha='center', va='center', fontsize=10)
 for i in range(len(best_path)-1):
-    plt.plot([best_path[i] % 5, best_path[i+1] % 5], [best_path[i] // 5, best_path[i+1] // 5], color='red')
+    plt.plot([best_path[i] % graph.shape[1], best_path[i+1] % graph.shape[1]], [best_path[i] // graph.shape[1], best_path[i+1] // graph.shape[1]], color='red')
 plt.title('Optimal Path')
 plt.colorbar(label='Weight')
 plt.grid(visible=True)
@@ -147,3 +149,4 @@ plt.show()
 
 print(f"Optimal path: {best_path}")
 print(f"Optimal path length: {best_path_length}")
+    
