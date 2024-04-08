@@ -1,0 +1,22 @@
+alpha: Controls the influence of the pheromone trail.
+beta: Controls the influence of the visibility (distance in this case).
+rho: Evaporation rate of the pheromone trail.
+q: Constant used to update the pheromone trail.
+
+Here's a brief explanation of their effects:
+
+alpha:
+Increasing alpha makes the ants more likely to follow the pheromone trail, which means the algorithm will focus more on exploiting the current best solutions.
+Decreasing alpha will make the ants less likely to follow the pheromone trail, leading to more exploration and possibly finding new, better solutions.
+
+beta:
+Increasing beta makes the ants more likely to move towards nodes that are closer, based on the heuristic (distance).
+Decreasing beta will make the ants less likely to consider the distance, leading to more exploitation of the pheromone trail.
+
+rho:
+A higher rho value means the pheromone will evaporate slower, allowing the algorithm to remember the previous paths for a longer time.
+A lower rho value makes the pheromone evaporate faster, leading to less memory of previous paths.
+
+q:
+A higher q value will increase the pheromone update, potentially intensifying the search around the better solutions.
+A lower q value will decrease the pheromone update, making the ants less likely to reinforce the pheromone trail.
