@@ -118,15 +118,15 @@ class AntColony:
 # Define the custom graph (grid)
 graph = np.array([
     [3, 2, 3, 4, 5],
-    [1, 3, 1, 4, 2],
-    [1, 1, 3, 5, 3],
-    [4, 4, 1, 3, 4],
-    [5, 2, 3, 1, 3]
+    [2, 3, 1, 4, 2],
+    [3, 1, 5, 5, 3],
+    [4, 4, 5, 3, 4],
+    [5, 2, 3, 4, 3]
 ])
 
 # Start and end nodes
 start_node = 0
-end_node = 24
+end_node = 15
 
 # Initialize and run the Ant Colony Optimization algorithm
 ant_colony = AntColony(num_ants=100, graph=graph, start_node=start_node, end_node=end_node)
@@ -144,3 +144,6 @@ plt.title('Optimal Path')
 plt.colorbar(label='Weight')
 plt.grid(visible=True)
 plt.show()
+
+print(f"Optimal path: {best_path}")
+print(f"Optimal path length: {best_path_length}")
