@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 class AntColony:
     def __init__(self, num_ants, graph, start_node, end_node, alpha=1, beta=2, rho=0.5, q=100, max_iter=100, stop_percentage=0.5):
@@ -38,6 +39,7 @@ class AntColony:
         self.best_path_length_distance = np.inf
 
     def find_path(self):
+        self.ants_paths = []  # List to store paths taken by all ants in each iteration
         for iter in range(self.max_iter):
             print(f"Iteration {iter}")
             all_paths = self.generate_paths()
@@ -57,6 +59,9 @@ class AntColony:
             # Check if specified percentage of all ants have found the optimal path
             if num_best_paths >= self.stop_percentage * self.num_ants:
                 break
+
+            # Store the paths of all ants for this iteration
+            self.ants_paths.append([path[0] for path, _ in all_paths])
 
         return self.best_path, self.best_path_length_weight
 
@@ -144,7 +149,12 @@ end_node = 48
 ant_colony = AntColony(num_ants=100, graph=graph, start_node=start_node, end_node=end_node, alpha=1, beta=2, rho=0.5, q=100, max_iter=100, stop_percentage=0.5)
 best_path, best_path_length_weight = ant_colony.find_path()
 
-# Plotting the graph
+# # Create animation
+# fig = plt.figure(figsize=(10, 10))
+# ani = FuncAnimation(fig, animate, frames=len(ant_colony.ants_paths), interval=1000, repeat=False)
+# ani.save('ACO Test/ant_colony_optimization.mp4', writer='ffmpeg', fps=1)
+
+# Plotting the final graph with the optimal path
 plt.figure(figsize=(10, 10))
 plt.imshow(graph, cmap='Blues')
 for i in range(graph.shape[0]):
@@ -155,6 +165,10 @@ for i in range(len(best_path)-1):
 plt.title('Optimal Path')
 plt.colorbar(label='Weight')
 plt.grid(visible=True)
+plt.text(0, -2, f"Optimal path: {best_path}", fontsize=12)
+plt.text(0, -1.5, f"Optimal path length based on weights: {best_path_length_weight}", fontsize=12)
+plt.text(0, -1, f"Optimal path length based on distance: {ant_colony.best_path_length_distance}", fontsize=12)
+plt.savefig('ACO Test/optimal_path_plot.png', bbox_inches='tight')
 plt.show()
 
 print(f"Optimal path: {best_path}")
