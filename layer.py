@@ -5,6 +5,7 @@ from deepforest import get_data
 import matplotlib.pyplot as plt
 from PIL import Image
 import rasterio
+import ee
 
 class Grid_Layers:
 
@@ -37,6 +38,93 @@ class Grid_Layers:
         self.image_path = image_path
         self.rows = rows
         self.cols = cols
+
+    def get_image(self):
+        '''
+        Get the image from point A to point B using Google Maps API
+
+
+        '''
+
+        ee.Authenticate()
+        ee.Initialize()
+        
+        # get the bounding box of the image
+        coord_A = ee.Geometry.Point(self.point_a[0], self.point_a[1])
+        coord_B = ee.Geometry.Point(self.point_b[0], self.point_b[1])
+
+        centre_coords = [ (self.point_a[0] + self.point_b[0]) / 2, (self.point_a[1] + self.point_b[1]) / 2]
+
+        # create a bounding box that has a and b as two opposite corners of the rectangle
+        # the max and min of the coordinates are used to create the rectangle
+        lat_min = min(coord_A.getInfo().get("coordinates")[1], coord_B.getInfo().get("coordinates")[1])
+        lat_max = max(coord_A.getInfo().get("coordinates")[1], coord_B.getInfo().get("coordinates")[1])
+        lon_min = min(coord_A.getInfo().get("coordinates")[0], coord_B.getInfo().get("coordinates")[0])
+        lon_max = max(coord_A.getInfo().get("coordinates")[0], coord_B.getInfo().get("coordinates")[0])
+
+        # add a buffer to the bounding box
+        buffer = 0.0005
+        lat_min -= buffer
+        lat_max += buffer
+        lon_min -= buffer
+        lon_max += buffer
+
+        # make the bounding box a geometry object
+        bounding_box = ee.Geometry.Rectangle([lon_min, lat_min, lon_max, lat_max])
+
+        # extract satellite image of the area
+        image_collection = ee.ImageCollection("COPERNICUS/S2")
+        image_collection = image_collection.filterBounds(bounding_box)
+        image_collection = image_collection.filterDate("2023-01-01", "2024-12-31")
+        # image_collection = image_collection.sort()
+        image = image_collection.first()
+
+        # get the image
+        image = image.visualize(**{
+            "bands": ["B4", "B3", "B2"],
+            "min": 1000,
+            "max": 5000,
+        })
+
+        # resample the image with a resolution of 1m
+        res = 0.1
+        image = image.resample("bilinear").reproject(crs= image.projection(), scale=res)
+
+
+        # extract values from the image
+        image = image.updateMask(image.mask().reduce("min"))
+
+
+        # show the image with ee
+        print(ee.Image(image).getThumbUrl({
+            "region": bounding_box.getInfo()["coordinates"],
+            "dimensions": "1500x1500"
+        }))
+
+
+        elevation_clip = elevation.clip(bounding_box)
+
+        res = 10
+
+        resampled = elevation_clip.resample("bilinear").reproject(crs= elevation_clip.projection(), scale=res)
+
+        opacity = 0.9
+
+        vis_params = {
+            "min": 0,
+            "max": 300,
+            "opacity": opacity
+        }
+
+        # get the image
+        image = resampled.visualize(**vis_params)
+
+        # show the image with ee
+        print(ee.Image(image).getThumbUrl({
+            "region": bounding_box.getInfo()["coordinates"],
+            "dimensions": "1500x1500"
+        }))
+        pass
 
     def tree_grid(self, plot=False):
         '''
@@ -128,6 +216,11 @@ class Grid_Layers:
         '''
         Generate a grid of slope values between 0 and 1
         '''
+
+        dataset = ee.Image("CGIAR/SRTM90_V4")
+        elevation = dataset.select("elevation")
+        slope = ee.Terrain.slope(elevation)
+
         pass
 
     def combine_layers(self, tree_w, slope_w):
