@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+import h5py
 
 class AntColony:
     def __init__(self, num_ants, graph, start_node, end_node, alpha=1, beta=2, rho=0.5, q=100, max_iter=100, stop_percentage=0.5):
@@ -178,7 +179,11 @@ def animate(frame):
 #     [2, 1, 1, 1, 3, 2, 1]
 # ])
 
-graph = np.random.randint(1, 6, (30, 30))
+# Load a .h5 file for the graph
+with h5py.File('density.h5', 'r') as f:
+    graph = f['graph'][:]
+
+# graph = np.random.randint(1, 6, (30, 30))
 
 # Start and end nodes
 start_node = 0
