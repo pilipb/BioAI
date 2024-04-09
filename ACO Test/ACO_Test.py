@@ -66,11 +66,13 @@ class AntColony:
 
             # Save the best path and all paths every 10 iterations
             if iter % 10 == 0:
-                with h5py.File(f'ACO Test/paths_iteration_{iter}.h5', 'w') as f:
+                with h5py.File(f'ACO Test/Path Iteration Files/paths_iteration_{iter}.h5', 'w') as f:
                     f.create_dataset('best_path', data=self.best_path)
                     f.create_dataset('best_path_length_weight', data=self.best_path_length_weight)
                     f.create_dataset('best_path_length_distance', data=self.best_path_length_distance)
-                    f.create_dataset('ants_paths', data=self.ants_paths)
+
+                    for idx, path in enumerate(self.ants_paths[-1]):
+                        f.create_dataset(f'ant_path_{idx}', data=np.array(path))
 
         return self.best_path, self.best_path_length_weight
 
@@ -198,7 +200,7 @@ start_node = 0
 end_node = graph.shape[0] * graph.shape[1] - 1
 
 # Initialize and run the Ant Colony Optimization algorithm
-ant_colony = AntColony(num_ants=100, graph=graph, start_node=start_node, end_node=end_node, alpha=1, beta=2, rho=0.5, q=100, max_iter=1000, stop_percentage=0.5)
+ant_colony = AntColony(num_ants=100, graph=graph, start_node=start_node, end_node=end_node, alpha=0.5, beta=2, rho=0.5, q=100, max_iter=500, stop_percentage=0.5)
 best_path, best_path_length_weight = ant_colony.find_path()
 
 # Save best path as a .h5 file
@@ -208,17 +210,17 @@ with h5py.File(f'ACO Test/best_path.h5', 'w') as f:
 # Plotting the final graph with the optimal path
 plt.figure(figsize=(10, 10))
 plt.imshow(graph, cmap='Blues')
-for i in range(graph.shape[0]):
-    for j in range(graph.shape[1]):
-        plt.text(j, i, str(graph[i, j]), color='blue', ha='center', va='center', fontsize=10)
+# for i in range(graph.shape[0]):
+#     for j in range(graph.shape[1]):
+#         plt.text(j, i, str(graph[i, j]), color='blue', ha='center', va='center', fontsize=10)
 for i in range(len(best_path)-1):
     plt.plot([best_path[i] % graph.shape[1], best_path[i+1] % graph.shape[1]], [best_path[i] // graph.shape[1], best_path[i+1] // graph.shape[1]], color='red')
 plt.title('Optimal Path')
-plt.colorbar(label='Weight')
-plt.grid(visible=True)
-plt.text(0, -2, f"Optimal path: {best_path}", fontsize=12)
-plt.text(0, -1.5, f"Optimal path length based on weights: {best_path_length_weight}", fontsize=12)
-plt.text(0, -1, f"Optimal path length based on distance: {ant_colony.best_path_length_distance}", fontsize=12)
+# plt.colorbar(label='Weight')
+# plt.grid(visible=True)
+# plt.text(0, -2, f"Optimal path: {best_path}", fontsize=12)
+# plt.text(0, -1.5, f"Optimal path length based on weights: {best_path_length_weight}", fontsize=12)
+# plt.text(0, -1, f"Optimal path length based on distance: {ant_colony.best_path_length_distance}", fontsize=12)
 plt.savefig('ACO Test/optimal_path_plot.png', bbox_inches='tight')
 
 print(f"Optimal path: {best_path}")
