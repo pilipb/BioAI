@@ -3,11 +3,21 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import rasterio
 
 with h5py.File('density.h5', 'r') as f:
     graph = f['density'][:]
 
-with h5py.File('ACO Test/Path Iteration Files/paths_iteration_0.h5', 'r') as f:
+# open tif image
+image_path = "/Users/philblecher/Desktop/Github/BioAI/test_imgs/example.tif"
+image = rasterio.open(image_path)
+image = image.read()
+image = np.moveaxis(image, 0, -1)
+# scale image to 50x50 pixels
+image = image.squeeze()
+# plt.imshow(image)
+
+with h5py.File('ACO Test/Path Iteration Files/paths_iteration_10.h5', 'r') as f:
     best_path = f['best_path'][:]
     ant_one = f['ant_path_0'][:]
     ant_two = f['ant_path_1'][:]
@@ -19,15 +29,21 @@ best_path = ant_two
 start_node = 0
 end_node = graph.shape[0] * graph.shape[1] - 1
 
+x_size = image.shape[1] / graph.shape[1]
+y_size = image.shape[0] / graph.shape[0]
+
 # Plotting the final graph with the optimal path
-plt.figure(figsize=(10, 10))
-plt.imshow(graph, cmap='Blues')
+plt.figure(figsize=(8 ,8))
+
+# plt.imshow(graph, cmap='Blues')
+
 # for i in range(graph.shape[0]):
 #     for j in range(graph.shape[1]):
 #         plt.text(j, i, str(graph[i, j]), color='blue', ha='center', va='center', fontsize=10)
 for i in range(len(best_path)-1):
-    plt.plot([best_path[i] % graph.shape[1], best_path[i+1] % graph.shape[1]], [best_path[i] // graph.shape[1], best_path[i+1] // graph.shape[1]], color='red')
+    plt.plot([best_path[i] % graph.shape[1] * x_size, best_path[i+1] % graph.shape[1] *x_size], [best_path[i] // graph.shape[1] * y_size, best_path[i+1] // graph.shape[1]* y_size], color='red')
 plt.title('Optimal Path')
+plt.imshow(image)
 # plt.colorbar(label='Weight')
 # plt.grid(visible=True)
 # plt.text(0, -2, f"Optimal path: {best_path}", fontsize=12)
