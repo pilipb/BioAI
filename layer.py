@@ -223,6 +223,13 @@ class Grid_Layers:
 
         pass
 
+    def river_grid(self):
+        '''
+        Identify where the rivers are is in the image and generate a grid of river values between 0 and 1
+
+        '''
+        pass
+
     def combine_layers(self, tree_w, slope_w):
         '''
         Combine the two layers into a single grid using input weights
