@@ -1,0 +1,32 @@
+# Load the best path .h5 file and display the path on the map
+import h5py
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
+with h5py.File('density.h5', 'r') as f:
+    graph = f['density'][:]
+
+with h5py.File('ACO Test/best_path.h5', 'r') as f:
+    best_path = f['best_path'][:]
+
+# Start and end nodes
+start_node = 0
+end_node = graph.shape[0] * graph.shape[1] - 1
+
+# Plotting the final graph with the optimal path
+plt.figure(figsize=(10, 10))
+plt.imshow(graph, cmap='Blues')
+# for i in range(graph.shape[0]):
+#     for j in range(graph.shape[1]):
+#         plt.text(j, i, str(graph[i, j]), color='blue', ha='center', va='center', fontsize=10)
+for i in range(len(best_path)-1):
+    plt.plot([best_path[i] % graph.shape[1], best_path[i+1] % graph.shape[1]], [best_path[i] // graph.shape[1], best_path[i+1] // graph.shape[1]], color='red')
+plt.title('Optimal Path')
+plt.colorbar(label='Weight')
+plt.grid(visible=True)
+# plt.text(0, -2, f"Optimal path: {best_path}", fontsize=12)
+# plt.text(0, -1.5, f"Optimal path length based on weights: {best_path_length_weight}", fontsize=12)
+# plt.text(0, -1, f"Optimal path length based on distance: {ant_colony.best_path_length_distance}", fontsize=12)
+plt.show()
+# plt.savefig('ACO Test/optimal_path_plot.png', bbox_inches='tight')

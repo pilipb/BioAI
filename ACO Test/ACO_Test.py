@@ -64,6 +64,14 @@ class AntColony:
             # Store the paths of all ants for this iteration
             self.ants_paths.append([path for path, _ in all_paths])
 
+            # Save the best path and all paths every 10 iterations
+            if iter % 10 == 0:
+                with h5py.File(f'ACO Test/paths_iteration_{iter}.h5', 'w') as f:
+                    f.create_dataset('best_path', data=self.best_path)
+                    f.create_dataset('best_path_length_weight', data=self.best_path_length_weight)
+                    f.create_dataset('best_path_length_distance', data=self.best_path_length_distance)
+                    f.create_dataset('ants_paths', data=self.ants_paths)
+
         return self.best_path, self.best_path_length_weight
 
     def generate_paths(self):
@@ -181,7 +189,7 @@ def animate(frame):
 
 # Load a .h5 file for the graph
 with h5py.File('density.h5', 'r') as f:
-    graph = f['graph'][:]
+    graph = f['density'][:]
 
 # graph = np.random.randint(1, 6, (30, 30))
 
@@ -190,8 +198,12 @@ start_node = 0
 end_node = graph.shape[0] * graph.shape[1] - 1
 
 # Initialize and run the Ant Colony Optimization algorithm
-ant_colony = AntColony(num_ants=20, graph=graph, start_node=start_node, end_node=end_node, alpha=1, beta=2, rho=0.5, q=100, max_iter=100, stop_percentage=0.5)
+ant_colony = AntColony(num_ants=100, graph=graph, start_node=start_node, end_node=end_node, alpha=1, beta=2, rho=0.5, q=100, max_iter=1000, stop_percentage=0.5)
 best_path, best_path_length_weight = ant_colony.find_path()
+
+# Save best path as a .h5 file
+with h5py.File(f'ACO Test/best_path.h5', 'w') as f:
+    f.create_dataset('best_path', data=best_path)
 
 # Plotting the final graph with the optimal path
 plt.figure(figsize=(10, 10))
