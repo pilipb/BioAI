@@ -61,7 +61,7 @@ class AntColony:
                 break
 
             # Store the paths of all ants for this iteration
-            self.ants_paths.append([path[0] for path, _ in all_paths])
+            self.ants_paths.append([path for path, _ in all_paths])
 
         return self.best_path, self.best_path_length_weight
 
@@ -131,41 +131,61 @@ class AntColony:
 
 def animate(frame):
     plt.clf()
-    plt.figure(figsize=(10, 10))
+    # plt.figure(figsize=(10, 10))
     plt.imshow(graph, cmap='Blues')
+    plt.title(f'Iteration {frame+1}')
+    plt.colorbar(label='Weight')
+    # plt.grid(visible=True)
+    # Plot the start and end nodes
+    plt.text(start_node % graph.shape[1], start_node // graph.shape[1], '*', color='red', ha='center', va='center', fontsize=20)
+    plt.text(end_node % graph.shape[1], end_node // graph.shape[1], '*', color='red', ha='center', va='center', fontsize=20)
     for i in range(graph.shape[0]):
         for j in range(graph.shape[1]):
             plt.text(j, i, str(graph[i, j]), color='blue', ha='center', va='center', fontsize=10)
     
     colors = ['red', 'green', 'yellow', 'orange', 'purple', 'cyan', 'magenta', 'pink']
-    for idx, ant_path in enumerate(all_ants_paths[frame]):
-        row, col = ant_path // graph.shape[1], ant_path % graph.shape[1]
-        plt.scatter(col, row, color=colors[idx % len(colors)], s=50)
+    iteration_path_weights = []
+    for idx_iter, ant_path_iter in enumerate(all_ants_paths[frame]):
+        ant_weight = 0
+        for idx, ant_path in enumerate(ant_path_iter):
+            # Plot the path of each ant as a line
+            if idx > 0 and ant_path != ant_path_iter[idx-1]:
+                plt.plot([ant_path_iter[idx-1] % graph.shape[1], ant_path % graph.shape[1]], [ant_path_iter[idx-1] // graph.shape[1], ant_path // graph.shape[1]], color=colors[idx_iter % len(colors)])
+                plt.savefig(f'ACO Test/GIF Frames/iteration_{frame+1}_ant_{idx_iter+1}_line_{idx+1}.png', bbox_inches='tight')
+
+            row, col = ant_path // graph.shape[1], ant_path % graph.shape[1]
+            ant_weight += graph[row, col]
+
+        iteration_path_weights.append(ant_weight)
+
+    # Highlight the best path
+    best_path_weight = min(iteration_path_weights)
+    best_path_idx = iteration_path_weights.index(best_path_weight)
+    best_path = all_ants_paths[frame][best_path_idx]
     
     for i in range(len(best_path)-1):
-        plt.plot([best_path[i] % graph.shape[1], best_path[i+1] % graph.shape[1]], [best_path[i] // graph.shape[1], best_path[i+1] // graph.shape[1]], color='red')
-    
-    plt.title(f'Iteration {frame+1}')
-    plt.colorbar(label='Weight')
-    plt.grid(visible=True)
+        plt.plot([best_path[i] % graph.shape[1], best_path[i+1] % graph.shape[1]], [best_path[i] // graph.shape[1], best_path[i+1] // graph.shape[1]], color='red', linewidth=3)
+        plt.savefig(f'ACO Test/GIF Frames/iteration_{frame+1}_best_path.png', bbox_inches='tight')
 
 # Define the custom graph (grid)
-graph = np.array([
-    [3, 2, 3, 4, 5, 2, 3],
-    [1, 3, 1, 4, 2, 3, 4],
-    [1, 1, 3, 5, 3, 1, 2],
-    [1, 4, 5, 3, 4, 2, 1],
-    [5, 1, 3, 4, 3, 4, 5],
-    [1, 1, 3, 4, 2, 3, 4],
-    [2, 1, 1, 1, 3, 2, 1]
-])
+# graph = np.array([
+#     [3, 2, 3, 4, 5, 2, 3],
+#     [1, 3, 1, 4, 2, 3, 4],
+#     [1, 1, 3, 5, 3, 1, 2],
+#     [1, 4, 5, 3, 4, 2, 1],
+#     [5, 1, 3, 4, 3, 4, 5],
+#     [1, 1, 3, 4, 2, 3, 4],
+#     [2, 1, 1, 1, 3, 2, 1]
+# ])
+
+graph = np.random.randint(1, 6, (30, 30))
 
 # Start and end nodes
 start_node = 0
-end_node = 48
+end_node = graph.shape[0] * graph.shape[1] - 1
 
 # Initialize and run the Ant Colony Optimization algorithm
-ant_colony = AntColony(num_ants=8, graph=graph, start_node=start_node, end_node=end_node, alpha=1, beta=2, rho=0.5, q=100, max_iter=10, stop_percentage=0.5)
+ant_colony = AntColony(num_ants=20, graph=graph, start_node=start_node, end_node=end_node, alpha=1, beta=2, rho=0.5, q=100, max_iter=100, stop_percentage=0.5)
 best_path, best_path_length_weight = ant_colony.find_path()
 
 # Plotting the final graph with the optimal path
@@ -184,11 +204,11 @@ plt.text(0, -1.5, f"Optimal path length based on weights: {best_path_length_weig
 plt.text(0, -1, f"Optimal path length based on distance: {ant_colony.best_path_length_distance}", fontsize=12)
 plt.savefig('ACO Test/optimal_path_plot.png', bbox_inches='tight')
 
-# Create and save the animation
-all_ants_paths = ant_colony.ants_paths
-ani = FuncAnimation(plt.gcf(), animate, frames=len(all_ants_paths), interval=1000, repeat=False)
-ani.save('ACO Test/ant_colony_optimization.gif', writer='pillow', fps=1)
-
 print(f"Optimal path: {best_path}")
 print(f"Optimal path length based on weights: {best_path_length_weight}")
 print(f"Optimal path length based on distance: {ant_colony.best_path_length_distance}")
+
+# Create and save the animation
+# all_ants_paths = ant_colony.ants_paths
+# ani = FuncAnimation(plt.gcf(), animate, frames=len(all_ants_paths), interval=1000, repeat=False)
+# ani.save('ACO Test/ant_colony_optimization.gif', writer='pillow', fps=1)
