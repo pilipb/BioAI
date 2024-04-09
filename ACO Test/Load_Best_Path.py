@@ -7,8 +7,13 @@ import matplotlib.patches as patches
 with h5py.File('density.h5', 'r') as f:
     graph = f['density'][:]
 
-with h5py.File('ACO Test/best_path.h5', 'r') as f:
+with h5py.File('ACO Test/Path Iteration Files/paths_iteration_0.h5', 'r') as f:
     best_path = f['best_path'][:]
+    ant_one = f['ant_path_0'][:]
+    ant_two = f['ant_path_1'][:]
+    print(f.keys())
+
+best_path = ant_two
 
 # Start and end nodes
 start_node = 0
@@ -23,8 +28,8 @@ plt.imshow(graph, cmap='Blues')
 for i in range(len(best_path)-1):
     plt.plot([best_path[i] % graph.shape[1], best_path[i+1] % graph.shape[1]], [best_path[i] // graph.shape[1], best_path[i+1] // graph.shape[1]], color='red')
 plt.title('Optimal Path')
-plt.colorbar(label='Weight')
-plt.grid(visible=True)
+# plt.colorbar(label='Weight')
+# plt.grid(visible=True)
 # plt.text(0, -2, f"Optimal path: {best_path}", fontsize=12)
 # plt.text(0, -1.5, f"Optimal path length based on weights: {best_path_length_weight}", fontsize=12)
 # plt.text(0, -1, f"Optimal path length based on distance: {ant_colony.best_path_length_distance}", fontsize=12)
