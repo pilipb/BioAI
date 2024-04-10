@@ -11,7 +11,7 @@ import cv2
 
 class Grid_Layers:
 
-    def __init__(self, point_a, point_b, rows, cols, buffer_dist=100):
+    def __init__(self, point_a, point_b, cols, buffer_dist=100):
         '''
         Grid Layers class constructor:
         This class will generate and contain the layers of the grid for a given location / image
@@ -23,8 +23,8 @@ class Grid_Layers:
         point_a: tuple of x, y coordinates latitude and longitude
         point_b: tuple of x, y coordinates latitude and longitude
         image_path: image path to file tif or png
-        rows: number of rows for the grid
         cols: number of columns for the grid
+            the rows are automatically calculated to retain aspect ratio.
 
 
         Methods:
@@ -37,8 +37,14 @@ class Grid_Layers:
 
         self.point_a = point_a
         self.point_b = point_b
-        self.rows = rows
         self.cols = cols
+
+        # make it so difference in 
+        self.rows = int(np.round((cols* abs(self.point_a[1] - (self.point_b[1]))) / (abs(self.point_a[0] - (self.point_b[0]))),0))
+        
+
+        print(self.cols)
+        print(self.rows)
 
         ee.Authenticate()
         ee.Initialize()
@@ -109,8 +115,10 @@ class Grid_Layers:
             image = np.moveaxis(image, 0, -1)
             image = image.squeeze()
 
+
+
             # flip the image
-            image = np.flip(image, axis=0)
+            # image = np.flip(image, axis=0)
 
             fig, ax = plt.subplots()
             ax.imshow(image)
@@ -304,7 +312,7 @@ class Grid_Layers:
         image = image.squeeze()
 
         # flip image
-        image = np.flip(image, axis=0)
+        # image = np.flip(image, axis=0)
 
         # transform the image into a grid of river values between 0 and 1
         river_grid = np.array(image)
