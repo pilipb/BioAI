@@ -130,7 +130,25 @@ class Grid_Layers:
         self.pixel_A = (self.coord_A.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * self.cols, (self.coord_A.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * self.rows
         self.pixel_B = (self.coord_B.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * self.cols, (self.coord_B.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * self.rows
 
+        # find index of these pixels on a n x m grid
+
+
+        start_index = self.coordinates_to_indices(self.pixel_A,self.rows, self.cols)
+        end_index = self.coordinates_to_indices(self.pixel_B,self.rows, self.cols)
+
+        self.start_index = start_index[1] * self.cols + start_index[0]
+        self.end_index = end_index[1] * self.cols + end_index[0]
+
         return self.image_path
+
+    def coordinates_to_indices(pixel, n, m):
+        # Calculate the row index (y-coordinate)
+        row_index = int((pixel[1] / (m - 1)) * (n - 1))
+        
+        # Calculate the column index (x-coordinate)
+        column_index = int((pixel[0] / (n - 1)) * (m - 1))
+        
+        return row_index, column_index 
     
     def get_image_from_path(self, path, view=False):
 
