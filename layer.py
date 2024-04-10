@@ -280,7 +280,7 @@ class Grid_Layers:
             'palette': ['red', 'blue'],
         }
         # Create a water mask layer, and set the image mask so that non-water areas are transparent.
-        water_mask = occurrence.gt(20).selfMask()
+        water_mask = occurrence.gt(90).selfMask()
 
         # clip
         water_mask_clip = water_mask.clip(self.bounding_box)
@@ -330,7 +330,7 @@ class Grid_Layers:
 
         return self.river_layer
 
-    def combine_layers(self, tree_w, river_w, slope_w):
+    def combine_layers(self, tree_w, river_w):
         '''
         Combine the two layers into a single grid using input weights
 
