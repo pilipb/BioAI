@@ -221,11 +221,9 @@ class Grid_Layers:
             x, y = (predictions["xmin"][i] + predictions["xmax"][i]) / 2, (predictions["ymin"][i] + predictions["ymax"][i]) / 2
             Z += np.exp(-((X - x)**2 + (Y - y)**2) / 5000) # the 1000 is a hyperparameter that controls the spread of the density map
 
-        # transform the density map into an array of density values shape (m,n,1)
-        Z = Z.reshape(Z.shape[0], Z.shape[1], 1)
 
         # resize and interpolate the density map to the same number of pixels as the image as requested
-        Z = np.array(Image.fromarray(Z.squeeze()).resize((self.rows, self.cols)))
+        Z = cv2.resize(Z, (self.cols, self.rows), interpolation=cv2.INTER_LINEAR)
 
 
         # create a copy of the image and resize it to the same number of pixels as the density map
@@ -286,7 +284,7 @@ class Grid_Layers:
             'palette': ['red', 'blue'],
         }
         # Create a water mask layer, and set the image mask so that non-water areas are transparent.
-        water_mask = occurrence.gt(90).selfMask()
+        water_mask = occurrence.gt(20).selfMask()
 
         # clip
         water_mask_clip = water_mask.clip(self.bounding_box)
@@ -313,11 +311,13 @@ class Grid_Layers:
         image = np.moveaxis(image, 0, -1)
         image = image.squeeze()
 
+        # make grayscale
+
         # flip image
         # image = np.flip(image, axis=0)
 
         # transform the image into a grid of river values between 0 and 1
-        river_grid = np.array(image)
+        river_grid = np.mean(np.array(image), axis=-1)
 
         # normalize the river grid
         river_grid = river_grid / np.max(river_grid)
@@ -347,7 +347,7 @@ class Grid_Layers:
         Sum each array
         '''
 
-        self.total_grid = tree_w * self.tree_grid.grid + river_w*self.river_grid.grid
+        self.total_grid = tree_w * self.tree_layer.grid + river_w*self.river_layer.grid
 
         # save combined density
         with h5py.File("density_grids/combined_density.h5", "w") as f:
