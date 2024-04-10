@@ -8,6 +8,8 @@ import rasterio
 import ee
 import requests
 import cv2
+import h5py
+
 
 class Grid_Layers:
 
@@ -244,6 +246,10 @@ class Grid_Layers:
 
         self.tree_layer = tree_layer
 
+        # save tree density
+        with h5py.File("density_grids/tree_density.h5", "w") as f:
+            f.create_dataset("tree_density", data=Z)
+
         return tree_layer
 
 
@@ -328,6 +334,10 @@ class Grid_Layers:
         self.river_layer = Layer(self.rows, self.cols)
         self.river_layer.grid = river_grid
 
+        # save river density
+        with h5py.File("density_grids/river_density.h5", "w") as f:
+            f.create_dataset("river_density", data=river_grid)
+
         return self.river_layer
 
     def combine_layers(self, tree_w, river_w):
@@ -338,6 +348,12 @@ class Grid_Layers:
         '''
 
         self.total_grid = tree_w * self.tree_grid.grid + river_w*self.river_grid.grid
+
+        # save combined density
+        with h5py.File("density_grids/combined_density.h5", "w") as f:
+            f.create_dataset("combined_density", data=self.total_grid)
+
+        return self.total_grid
 
 
 class Layer:
@@ -356,14 +372,4 @@ class Layer:
         self.grid = np.zeros((rows, cols))
 
 
-
-
-
-if __name__ == '__main__':
-
-    # Create a layer object
-    layer = Layer(10, 10)
-    print(layer.grid)
-    print(layer.rows)
-    print(layer.cols)
 
