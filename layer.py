@@ -6,10 +6,14 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import rasterio
 import ee
+import requests
+import cv2
+import h5py
+
 
 class Grid_Layers:
 
-    def __init__(self, point_a, point_b, image_path, rows, cols):
+    def __init__(self, point_a, point_b, cols, buffer_dist=100):
         '''
         Grid Layers class constructor:
         This class will generate and contain the layers of the grid for a given location / image
@@ -21,8 +25,8 @@ class Grid_Layers:
         point_a: tuple of x, y coordinates latitude and longitude
         point_b: tuple of x, y coordinates latitude and longitude
         image_path: image path to file tif or png
-        rows: number of rows for the grid
         cols: number of columns for the grid
+            the rows are automatically calculated to retain aspect ratio.
 
 
         Methods:
@@ -35,96 +39,141 @@ class Grid_Layers:
 
         self.point_a = point_a
         self.point_b = point_b
-        self.image_path = image_path
-        self.rows = rows
         self.cols = cols
 
-    def get_image(self):
-        '''
-        Get the image from point A to point B using Google Maps API
-
-
-        '''
-
+        # make it so difference in 
+        self.rows = int(np.round((cols* abs(self.point_a[1] - (self.point_b[1]))) / (abs(self.point_a[0] - (self.point_b[0]))),0))
+        
         ee.Authenticate()
         ee.Initialize()
         
         # get the bounding box of the image
-        coord_A = ee.Geometry.Point(self.point_a[0], self.point_a[1])
-        coord_B = ee.Geometry.Point(self.point_b[0], self.point_b[1])
-
-        centre_coords = [ (self.point_a[0] + self.point_b[0]) / 2, (self.point_a[1] + self.point_b[1]) / 2]
+        self.coord_A = ee.Geometry.Point(self.point_a[0], self.point_a[1])
+        self.coord_B = ee.Geometry.Point(self.point_b[0], self.point_b[1])
 
         # create a bounding box that has a and b as two opposite corners of the rectangle
         # the max and min of the coordinates are used to create the rectangle
-        lat_min = min(coord_A.getInfo().get("coordinates")[1], coord_B.getInfo().get("coordinates")[1])
-        lat_max = max(coord_A.getInfo().get("coordinates")[1], coord_B.getInfo().get("coordinates")[1])
-        lon_min = min(coord_A.getInfo().get("coordinates")[0], coord_B.getInfo().get("coordinates")[0])
-        lon_max = max(coord_A.getInfo().get("coordinates")[0], coord_B.getInfo().get("coordinates")[0])
+        self.lat_min = min(self.coord_A.getInfo().get("coordinates")[1], self.coord_B.getInfo().get("coordinates")[1])
+        self.lat_max = max(self.coord_A.getInfo().get("coordinates")[1], self.coord_B.getInfo().get("coordinates")[1])
+        self.lon_min = min(self.coord_A.getInfo().get("coordinates")[0], self.coord_B.getInfo().get("coordinates")[0])
+        self.lon_max = max(self.coord_A.getInfo().get("coordinates")[0], self.coord_B.getInfo().get("coordinates")[0])
 
         # add a buffer to the bounding box
-        buffer = 0.0005
-        lat_min -= buffer
-        lat_max += buffer
-        lon_min -= buffer
-        lon_max += buffer
+        buffer = buffer_dist / 111000 # 1 degree of latitude is 111000 meters
+        self.lat_min -= buffer
+        self.lat_max += buffer
+        self.lon_min -= buffer
+        self.lon_max += buffer
+
+        self.box_width = self.lon_max - self.lon_min
+        self.box_height = self.lat_max - self.lat_min
 
         # make the bounding box a geometry object
-        bounding_box = ee.Geometry.Rectangle([lon_min, lat_min, lon_max, lat_max])
+        self.bounding_box = ee.Geometry.Rectangle([self.lon_min, self.lat_min, self.lon_max, self.lat_max])
 
-        # extract satellite image of the area
-        image_collection = ee.ImageCollection("COPERNICUS/S2")
-        image_collection = image_collection.filterBounds(bounding_box)
-        image_collection = image_collection.filterDate("2023-01-01", "2024-12-31")
-        # image_collection = image_collection.sort()
-        image = image_collection.first()
+    def get_image(self, plot=False, resolution=0.5):
+        '''
+        Get the image from point A to point B using Google Maps API
 
-        # get the image
-        image = image.visualize(**{
-            "bands": ["B4", "B3", "B2"],
-            "min": 1000,
-            "max": 5000,
+        Args:
+        plot: boolean, if True, plot the image and the bounding boxes
+        resolution: resolution of the image in meters 
+                    minimise the resolution to get a higher resolution image
+                    however sometimes throws an error if the resolution is too low (depending on bounding box size)
+        buffer_dist: buffer distance to add to the bounding box in meters
+
+        Returns:
+        image_path: path to the image
+    
+
+        '''
+
+        
+        # get the satellite image
+        dataset = ee.ImageCollection("USDA/NAIP/DOQQ").filter(ee.Filter.date('2016-01-01', '2017-01-01')).mosaic()
+        true_color = dataset.select(['R', 'G', 'B'])
+        clipped_image = true_color.clip(self.bounding_box)
+
+        # Multi-band GeoTIFF file.
+        url = clipped_image.getDownloadUrl({
+            'name': 'download_sat_image',
+            'scale': resolution,
+            'format': 'GeoTIFF',
         })
 
-        # resample the image with a resolution of 1m
-        res = 0.1
-        image = image.resample("bilinear").reproject(crs= image.projection(), scale=res)
+        response = requests.get(url)
+        self.image_path = 'test_imgs/download.tif'
+
+        with open('test_imgs/download.tif', 'wb') as fd:
+            fd.write(response.content)
+
+        if plot:
+            image = rasterio.open(self.image_path)
+            image = image.read()
+            image = np.moveaxis(image, 0, -1)
+            image = image.squeeze()
 
 
-        # extract values from the image
-        image = image.updateMask(image.mask().reduce("min"))
+
+            # flip the image
+            # image = np.flip(image, axis=0)
+
+            fig, ax = plt.subplots()
+            ax.imshow(image)
+            ax.scatter((self.coord_A.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * image.shape[1], 
+                        (self.coord_A.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * image.shape[0], color="red")
+            ax.scatter((self.coord_B.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * image.shape[1],
+                        (self.coord_B.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * image.shape[0], color="blue")
+            plt.show()
+
+        # give the points as pixel coordinates based on rows and cols
+        self.pixel_A = [(self.coord_A.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * self.cols, (self.coord_A.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * self.rows]
+        self.pixel_B = [(self.coord_B.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * self.cols, (self.coord_B.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * self.rows]
+
+        # find index of these pixels on a n x m grid
 
 
-        # show the image with ee
-        print(ee.Image(image).getThumbUrl({
-            "region": bounding_box.getInfo()["coordinates"],
-            "dimensions": "1500x1500"
-        }))
+        start_index = self.coordinates_to_indices(self.pixel_A, self.rows, self.cols)
+        end_index = self.coordinates_to_indices(self.pixel_B, self.rows, self.cols)
 
+        self.start_index = start_index[1] * self.cols + start_index[0]
+        self.end_index = end_index[1] * self.cols + end_index[0]
 
-        elevation_clip = elevation.clip(bounding_box)
+        return self.image_path
 
-        res = 10
+    def coordinates_to_indices(self, pixel, n, m):
+        # Calculate the row index (y-coordinate)
+        row_index = int((pixel[1] / (m - 1)) * (n - 1))
+        
+        # Calculate the column index (x-coordinate)
+        column_index = int((pixel[0] / (n - 1)) * (m - 1))
+        
+        return row_index, column_index 
+    
+    def get_image_from_path(self, path, view=False):
 
-        resampled = elevation_clip.resample("bilinear").reproject(crs= elevation_clip.projection(), scale=res)
+        '''
+        Return the image from the path as an np.array
+        '''
 
-        opacity = 0.9
+        if path.endswith('.tif'):
+            image = rasterio.open(path)
+            image = image.read()
+            image = np.moveaxis(image, 0, -1)
+            image = image.squeeze()
 
-        vis_params = {
-            "min": 0,
-            "max": 300,
-            "opacity": opacity
-        }
+        elif path.endswith('.png') or path.endswith('.jpg'):
+            image = plt.imread(path)
+        else:
+            raise ValueError('Image file must be .tif, .png or .jpg')
+        
+        image = np.array(image)
+        
+        if view:
+            plt.imshow(image)
+            plt.show()
 
-        # get the image
-        image = resampled.visualize(**vis_params)
-
-        # show the image with ee
-        print(ee.Image(image).getThumbUrl({
-            "region": bounding_box.getInfo()["coordinates"],
-            "dimensions": "1500x1500"
-        }))
-        pass
+        return image
 
     def tree_grid(self, plot=False):
         '''
@@ -145,7 +194,7 @@ class Grid_Layers:
             predictions = model.predict_tile(raster_path=self.image_path, return_plot=False, patch_size=100, patch_overlap=0.1)
 
             # open tif image
-            image = rasterio.open(image_path)
+            image = rasterio.open(self.image_path)
             image = image.read()
             image = np.moveaxis(image, 0, -1)
             image = image.squeeze()
@@ -165,7 +214,7 @@ class Grid_Layers:
             # plot the image .tif and the predictions
             fig, ax = plt.subplots(figsize=(20, 20))
             plt.imshow(image)
-            plt.show()
+ 
 
             # plot the bounding boxes
             for i in range(len(predictions)):
@@ -177,6 +226,8 @@ class Grid_Layers:
                             predictions["ymin"][i] + (predictions["ymax"][i] - predictions["ymin"][i]) / 2,   
                             color="blue", linewidths=2.5, edgecolors="blue")
                 
+            plt.show()
+                
         # transform the scatter into a density map
         # create a grid of points
         x_size = np.linspace(0, image.shape[1], image.shape[1])
@@ -186,13 +237,16 @@ class Grid_Layers:
         Z = np.zeros(X.shape)
         for i in range(len(predictions)):
             x, y = (predictions["xmin"][i] + predictions["xmax"][i]) / 2, (predictions["ymin"][i] + predictions["ymax"][i]) / 2
-            Z += np.exp(-((X - x)**2 + (Y - y)**2) / 10000) # the 1000 is a hyperparameter that controls the spread of the density map
+            Z += np.exp(-((X - x)**2 + (Y - y)**2) / 500) #a hyperparameter that controls the spread of the density map
 
-        # transform the density map into an array of density values shape (m,n,1)
-        Z = Z.reshape(Z.shape[0], Z.shape[1], 1)
 
         # resize and interpolate the density map to the same number of pixels as the image as requested
-        Z = np.array(Image.fromarray(Z.squeeze()).resize((self.rows, self.cols)))
+        Z = cv2.resize(Z, (self.cols, self.rows), interpolation=cv2.INTER_LINEAR)
+
+
+        # create a copy of the image and resize it to the same number of pixels as the density map
+        image = np.array(Image.fromarray(image).resize((self.rows, self.cols)))
+        self.resized_image = image
 
         # normalize the density map
         Z = Z / np.max(Z)
@@ -208,11 +262,14 @@ class Grid_Layers:
 
         self.tree_layer = tree_layer
 
+        # save tree density
+        with h5py.File("density_grids/tree_density.h5", "w") as f:
+            f.create_dataset("tree_density", data=Z)
+
         return tree_layer
 
 
-
-    def slope_grid(self):
+    def slope_grid(self, plot=False):
         '''
         Generate a grid of slope values between 0 and 1
         '''
@@ -221,20 +278,100 @@ class Grid_Layers:
         elevation = dataset.select("elevation")
         slope = ee.Terrain.slope(elevation)
 
+        elevation_clip = elevation.clip(self.bounding_box)
+
+        res = 10
+
+        resampled = elevation_clip.resample("bilinear").reproject(crs= elevation_clip.projection(), scale=res)
+
         pass
 
-    def river_grid(self):
+
+    def river_grid(self, plot=False, resolution=10):
         '''
         Identify where the rivers are is in the image and generate a grid of river values between 0 and 1
 
         '''
-        pass
 
-    def combine_layers(self, tree_w, slope_w):
+        gsw = ee.Image('JRC/GSW1_1/GlobalSurfaceWater')
+        occurrence = gsw.select('occurrence')
+
+        water_mask_params = {
+            'min': 0,
+            'max': 1,
+            'palette': ['red', 'blue'],
+        }
+        # Create a water mask layer, and set the image mask so that non-water areas are transparent.
+        water_mask = occurrence.gt(20).selfMask()
+
+        # clip
+        water_mask_clip = water_mask.clip(self.bounding_box)
+
+        # Visualize the water mask
+        water_mask_vis = water_mask_clip.visualize(**water_mask_params)
+
+        # get the image
+        url = water_mask_vis.getDownloadUrl({
+            'name': 'download_water_mask',
+            'scale': resolution,
+            'region': self.bounding_box,
+            'format': 'GeoTIFF',
+        })
+
+        response = requests.get(url)
+        water_mask_path = 'test_imgs/download_water_mask.tif'
+
+        with open(water_mask_path, 'wb') as fd:
+            fd.write(response.content)
+
+        image = rasterio.open(water_mask_path)
+        image = image.read()
+        image = np.moveaxis(image, 0, -1)
+        image = image.squeeze()
+
+        # make grayscale
+
+        # flip image
+        # image = np.flip(image, axis=0)
+
+        # transform the image into a grid of river values between 0 and 1
+        river_grid = np.mean(np.array(image), axis=-1)
+
+        # normalize the river grid
+        river_grid = river_grid / np.max(river_grid)
+
+        # resize the river grid to the same number of pixels as requested
+        river_grid = cv2.resize(river_grid, (self.cols, self.rows), interpolation=cv2.INTER_LINEAR)
+
+        if plot:
+            fig, ax = plt.subplots()
+            ax.imshow(river_grid)
+            plt.show()
+
+        # create Layer object
+        self.river_layer = Layer(self.rows, self.cols)
+        self.river_layer.grid = river_grid
+
+        # save river density
+        with h5py.File("density_grids/river_density.h5", "w") as f:
+            f.create_dataset("river_density", data=river_grid)
+
+        return self.river_layer
+
+    def combine_layers(self, tree_w, river_w):
         '''
         Combine the two layers into a single grid using input weights
+
+        Sum each array
         '''
-        pass
+
+        self.total_grid = tree_w * self.tree_layer.grid + river_w*self.river_layer.grid
+
+        # save combined density
+        with h5py.File("density_grids/combined_density.h5", "w") as f:
+            f.create_dataset("combined_density", data=self.total_grid)
+
+        return self.total_grid
 
 
 class Layer:
@@ -253,14 +390,4 @@ class Layer:
         self.grid = np.zeros((rows, cols))
 
 
-
-
-
-if __name__ == '__main__':
-
-    # Create a layer object
-    layer = Layer(10, 10)
-    print(layer.grid)
-    print(layer.rows)
-    print(layer.cols)
 
