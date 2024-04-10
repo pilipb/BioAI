@@ -127,21 +127,21 @@ class Grid_Layers:
             plt.show()
 
         # give the points as pixel coordinates based on rows and cols
-        self.pixel_A = (self.coord_A.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * self.cols, (self.coord_A.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * self.rows
-        self.pixel_B = (self.coord_B.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * self.cols, (self.coord_B.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * self.rows
+        self.pixel_A = [(self.coord_A.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * self.cols, (self.coord_A.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * self.rows]
+        self.pixel_B = [(self.coord_B.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * self.cols, (self.coord_B.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * self.rows]
 
         # find index of these pixels on a n x m grid
 
 
-        start_index = self.coordinates_to_indices(self.pixel_A,self.rows, self.cols)
-        end_index = self.coordinates_to_indices(self.pixel_B,self.rows, self.cols)
+        start_index = self.coordinates_to_indices(self.pixel_A, self.rows, self.cols)
+        end_index = self.coordinates_to_indices(self.pixel_B, self.rows, self.cols)
 
         self.start_index = start_index[1] * self.cols + start_index[0]
         self.end_index = end_index[1] * self.cols + end_index[0]
 
         return self.image_path
 
-    def coordinates_to_indices(pixel, n, m):
+    def coordinates_to_indices(self, pixel, n, m):
         # Calculate the row index (y-coordinate)
         row_index = int((pixel[1] / (m - 1)) * (n - 1))
         
@@ -237,7 +237,7 @@ class Grid_Layers:
         Z = np.zeros(X.shape)
         for i in range(len(predictions)):
             x, y = (predictions["xmin"][i] + predictions["xmax"][i]) / 2, (predictions["ymin"][i] + predictions["ymax"][i]) / 2
-            Z += np.exp(-((X - x)**2 + (Y - y)**2) / 5000) # the 1000 is a hyperparameter that controls the spread of the density map
+            Z += np.exp(-((X - x)**2 + (Y - y)**2) / 500) #a hyperparameter that controls the spread of the density map
 
 
         # resize and interpolate the density map to the same number of pixels as the image as requested
