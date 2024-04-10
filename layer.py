@@ -271,24 +271,21 @@ class Grid_Layers:
         occurrence = gsw.select('occurrence')
 
         water_mask_params = {
-            'palette': ['white', 'black'],
             'min': 0,
-            'max': 100,
+            'max': 1,
+            'palette': ['red', 'blue'],
         }
         # Create a water mask layer, and set the image mask so that non-water areas are transparent.
-        water_mask = occurrence.gt(90).unmask(0)
+        water_mask = occurrence.gt(20).selfMask()
 
         # clip
         water_mask_clip = water_mask.clip(self.bounding_box)
 
-        stats = water_mask_clip.reduceRegion(ee.Reducer.minMax(), self.bounding_box, 30).getInfo()
-        print("Statistics:", stats)
-
-        # # resample
-        # resampled = water_mask_clip.resample("bilinear").reproject(crs= water_mask_clip.projection(), scale=resolution)
+        # Visualize the water mask
+        water_mask_vis = water_mask_clip.visualize(**water_mask_params)
 
         # get the image
-        url = water_mask_clip.getDownloadUrl({
+        url = water_mask_vis.getDownloadUrl({
             'name': 'download_water_mask',
             'scale': resolution,
             'region': self.bounding_box,
@@ -306,6 +303,8 @@ class Grid_Layers:
         image = np.moveaxis(image, 0, -1)
         image = image.squeeze()
 
+        # flip image
+        image = np.flip(image, axis=0)
 
         # transform the image into a grid of river values between 0 and 1
         river_grid = np.array(image)
@@ -321,21 +320,20 @@ class Grid_Layers:
             ax.imshow(river_grid)
             plt.show()
 
-
-        print(river_grid.shape)
-        print(river_grid)
-
         # create Layer object
         self.river_layer = Layer(self.rows, self.cols)
         self.river_layer.grid = river_grid
 
         return self.river_layer
 
-    def combine_layers(self, tree_w, slope_w):
+    def combine_layers(self, tree_w, river_w, slope_w):
         '''
         Combine the two layers into a single grid using input weights
+
+        Sum each array
         '''
-        pass
+
+        self.total_grid = tree_w * self.tree_grid.grid + river_w*self.river_grid.grid
 
 
 class Layer:
