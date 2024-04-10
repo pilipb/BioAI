@@ -42,10 +42,6 @@ class Grid_Layers:
         # make it so difference in 
         self.rows = int(np.round((cols* abs(self.point_a[1] - (self.point_b[1]))) / (abs(self.point_a[0] - (self.point_b[0]))),0))
         
-
-        print(self.cols)
-        print(self.rows)
-
         ee.Authenticate()
         ee.Initialize()
         
