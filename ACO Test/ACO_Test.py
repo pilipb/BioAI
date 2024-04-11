@@ -42,7 +42,8 @@ class AntColony:
 
     def find_path(self):
         for iter in range(self.max_iter):
-            print(f"Iteration {iter}")
+            # Print the iteration number and the time of the iteration
+            # print(f"Iteration {iter} started")
             all_paths = self.generate_paths()
             self.update_pheromone(all_paths)
             shortest_path = min(all_paths, key=lambda x: x[1][0])  # Based on weight
@@ -55,7 +56,7 @@ class AntColony:
 
             # Count the number of ants that have found the best path
             num_best_paths = sum(all(ant_node == best_node for ant_node, best_node in zip(ant_path, self.best_path)) for ant_path, _ in all_paths)
-            print(f"Iteration {iter}: Number of ants on best path = {num_best_paths}")
+            # print(f"Iteration {iter}: Number of ants on best path = {num_best_paths}")
 
             # Check if specified percentage of all ants have found the optimal path
             if num_best_paths >= self.stop_percentage * self.num_ants:
@@ -146,18 +147,16 @@ if __name__ == '__main__':
     with h5py.File('density_grids/combined_density.h5', 'r') as f:
         graph = f['combined_density'][:]
 
-    # graph = np.random.randint(1, 6, (30, 30))
-
     # Start and end nodes
-    start_node = 1409
-    end_node = 439
+    start_node = 5619
+    end_node = 1779
 
     # Get the row and column of the start and end nodes
     start_row, start_col = start_node // graph.shape[1], start_node % graph.shape[1]
     end_row, end_col = end_node // graph.shape[1], end_node % graph.shape[1]
 
     # Initialize and run the Ant Colony Optimization algorithm
-    ant_colony = AntColony(num_ants=1000, graph=graph, start_node=start_node, end_node=end_node, alpha=0.5, beta=2, rho=0.5, q=100, max_iter=1000, stop_percentage=0.5)
+    ant_colony = AntColony(num_ants=1000, graph=graph, start_node=start_node, end_node=end_node, alpha=0.5, beta=2, rho=0.5, q=100, max_iter=5000, stop_percentage=0.5)
     best_path, best_path_length_weight = ant_colony.find_path()
 
     # Save best path as a .h5 file
