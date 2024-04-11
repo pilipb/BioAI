@@ -2,26 +2,42 @@
  
 A solution to sustainable forestry through bio-inspired route planning.
 
+The code creates a best route taking into account multiple layers:
 
-## Layers
+### Layers
 
 - tree density
-- elevation / slope
+- slope
+- rivers
 - habitat / species / biodiversity / age of tree
-
 
 ## How?
 
-- user would select a starting point and a destination over an area of interest
-- the algorithm would find the best route to take based on the layers
+1. The user selects a starting point and a destination in lat,lon coordinates
+2. The user runs the grid-making, followed by the route planning. This returns the best path.
 
-## The algorithm
+## References
+Uses Deepforest: Weinstein, B.G.; Marconi, S.; Bohlman, S.; Zare, A.; White, E. Individual Tree-Crown Detection in RGB Imagery Using Semi-Supervised Deep Learning Neural Networks. Remote Sens. 2019, 11, 1309
 
-- we will use existing algorithms to create the layers
-- we will use the slime mould algorithm as it is a bio-inspired algorithm that has been proven to be effective in finding the shortest path between two points. this will be applied to the combined layers to find the best route to take.
+Other imaging done through Google Earth Engine.
 
-### Tree density
-based on https://www.mdpi.com/2072-4292/13/2/322
+# Example
 
-### Elevation / slope
-based on 
+Step 1: Retrieving Satellite Image of Chosen Location
+![Step 1](example_imgs/1_satellite.png)
+
+Step 2: Retrieving Slope Values
+![Step 2](example_imgs/2_slope.png)
+
+Step 3: Retrieving River Locations
+![Step 3](example_imgs/3_river.png)
+
+Step 4: Retrieving Tree Locations Using deepforest
+![Step 4](example_imgs/deepforest.png)
+![Step 4](example_imgs/4_trees.png)
+
+Finally putting it all together to create the navigation grid:
+![Step 5](example_imgs/5_combo.png)
+
+And running the route planning algorithm:
+![Step 6](ACO Test/optimal_path_plot.png)
