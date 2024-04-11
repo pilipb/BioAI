@@ -226,6 +226,11 @@ class Grid_Layers:
                             predictions["ymin"][i] + (predictions["ymax"][i] - predictions["ymin"][i]) / 2,   
                             color="blue", linewidths=2.5, edgecolors="blue")
                 
+            ax.scatter((self.coord_A.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * image.shape[1], 
+                        (self.coord_A.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * image.shape[0], color="red")
+            ax.scatter((self.coord_B.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * image.shape[1],
+                        (self.coord_B.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * image.shape[0], color="blue")
+                
             plt.show()
                 
         # transform the scatter into a density map
@@ -254,6 +259,10 @@ class Grid_Layers:
         if plot:
             fig, ax = plt.subplots()
             ax.imshow(Z, aspect="auto")
+            ax.scatter((self.coord_A.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * image.shape[1], 
+                        (self.coord_A.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * image.shape[0], color="red")
+            ax.scatter((self.coord_B.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * image.shape[1],
+                        (self.coord_B.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * image.shape[0], color="blue")
             plt.show()
         
         # create Layer object
@@ -321,6 +330,12 @@ class Grid_Layers:
         if plot:
             fig, ax = plt.subplots()
             ax.imshow(image)
+
+            ax.scatter((self.coord_A.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * image.shape[1], 
+                        (self.coord_A.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * image.shape[0], color="red")
+            ax.scatter((self.coord_B.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * image.shape[1],
+                        (self.coord_B.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * image.shape[0], color="blue")
+            
             plt.show()
 
         # create Layer object
@@ -392,6 +407,10 @@ class Grid_Layers:
         if plot:
             fig, ax = plt.subplots()
             ax.imshow(river_grid)
+            ax.scatter((self.coord_A.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * river_grid.shape[1], 
+                        (self.coord_A.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * river_grid.shape[0], color="red")
+            ax.scatter((self.coord_B.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * river_grid.shape[1],
+                        (self.coord_B.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * river_grid.shape[0], color="blue")
             plt.show()
 
         # create Layer object
@@ -420,6 +439,10 @@ class Grid_Layers:
         if plot:
             fig, ax = plt.subplots()
             ax.imshow(self.total_grid)
+            ax.scatter((self.coord_A.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * self.total_grid.shape[1], 
+                        (self.coord_A.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * self.total_grid.shape[0], color="red")
+            ax.scatter((self.coord_B.getInfo().get("coordinates")[0] - self.lon_min) / self.box_width * self.total_grid.shape[1],
+                        (self.coord_B.getInfo().get("coordinates")[1] - self.lat_min) / self.box_height * self.total_grid.shape[0], color="blue")
             plt.show()
 
         return self.total_grid
