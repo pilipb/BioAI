@@ -19,11 +19,11 @@ image = image.squeeze()
 
 with h5py.File('ACO Test/Path Iteration Files/paths_iteration_10.h5', 'r') as f:
     best_path = f['best_path'][:]
-    ant_one = f['ant_path_0'][:]
-    ant_two = f['ant_path_1'][:]
-    print(f.keys())
+#     ant_one = f['ant_path_0'][:]
+#     ant_two = f['ant_path_1'][:]
+#     print(f.keys())
 
-best_path = ant_two
+# best_path = ant_two
 
 # Start and end nodes
 start_node = 0
