@@ -23,27 +23,27 @@ Other imaging done through Google Earth Engine.
 
 # Example
 
-Step 1: Retrieving Satellite Image of Chosen Location
+## Step 1: Retrieving Satellite Image of Chosen Location
 
 ![Step 1](example_imgs/1_satellite.png)
 
-Step 2: Retrieving Slope Values
+## Step 2: Retrieving Slope Values
 
 ![Step 2](example_imgs/2_slope.png)
 
-Step 3: Retrieving River Locations
+## Step 3: Retrieving River Locations
 
 ![Step 3](example_imgs/3_river.png)
 
-Step 4: Retrieving Tree Locations Using deepforest
+## Step 4: Retrieving Tree Locations Using deepforest
 
 ![Step 4](example_imgs/deepforest.png)
 ![Step 4](example_imgs/4_trees.png)
 
-Finally putting it all together to create the navigation grid:
+## Finally putting it all together to create the navigation grid:
 
 ![Step 5](example_imgs/5_combo.png)
 
-And running the route planning algorithm:
+## And running the route planning algorithm:
 
-![Step 6](ACO_Test/optimal_path_plot.png)
+![Step 6]()
