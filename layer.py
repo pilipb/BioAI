@@ -425,14 +425,14 @@ class Grid_Layers:
 
         return self.river_layer
 
-    def combine_layers(self, tree_w, river_w, slope_w, plot=False):
+    def combine_layers(self, tree_w = 2.5, river_w = 3, slope_w = 1, anti_wiggle = 1,  plot=False):
         '''
         Combine the two layers into a single grid using input weights
 
         Sum each array
         '''
 
-        self.total_grid = tree_w * self.tree_layer.grid + river_w*self.river_layer.grid + slope_w*self.slope_layer.grid
+        self.total_grid = tree_w * self.tree_layer.grid + river_w*self.river_layer.grid + slope_w*self.slope_layer.grid + anti_wiggle
 
         # save combined density
         with h5py.File("density_grids/combined_density.h5", "w") as f:
