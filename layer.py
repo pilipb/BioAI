@@ -269,23 +269,69 @@ class Grid_Layers:
         return tree_layer
 
 
-    def slope_grid(self, plot=False):
+    def slope_grid(self, plot=False, resolution=10):
         '''
-        Generate a grid of slope values between 0 and 1
+        Generate a grid of slope values between 0 and 1 with 1 = 90 degrees
         '''
 
-        dataset = ee.Image("CGIAR/SRTM90_V4")
-        elevation = dataset.select("elevation")
-        slope = ee.Terrain.slope(elevation)
+        # calculate slope:
+        dem = ee.Image('NASA/NASADEM_HGT/001').select('elevation')
 
-        elevation_clip = elevation.clip(self.bounding_box)
+        terrain = ee.Terrain.products(dem)
 
-        res = 10
+        params = {
+            'min': 0,
+            'max': 90,
+            'bands': ['slope'],
+            'palette': ['black', 'white']
+        }
 
-        resampled = elevation_clip.resample("bilinear").reproject(crs= elevation_clip.projection(), scale=res)
+        # Display the result.
+        water_mask_vis = terrain.visualize(**params)
 
-        pass
+        # get the image
+        url = water_mask_vis.getDownloadUrl({
+            'name': 'download_water_mask',
+            'scale': resolution,
+            'region': self.bounding_box,
+            'format': 'GeoTIFF',
+        })
 
+        response = requests.get(url)
+        slope_path = 'test_imgs/download_slope_mask.tif'
+
+        with open(slope_path, 'wb') as fd:
+            fd.write(response.content)
+
+        image = rasterio.open(slope_path)
+        image = image.read()
+        image = np.moveaxis(image, 0, -1)
+        image = image.squeeze()
+        image = np.array(image, dtype=np.uint8)
+
+        # transform the image into a grid of river values between 0 and 1
+        image = np.mean(np.array(image), axis=-1)
+
+        # normalize the river grid
+        image = image / image.max()
+
+        # resize the river grid to the same number of pixels as requested
+        image = cv2.resize(image, (self.cols, self.rows), interpolation=cv2.INTER_LINEAR)
+
+        if plot:
+            fig, ax = plt.subplots()
+            ax.imshow(image)
+            plt.show()
+
+        # create Layer object
+        self.slope_layer = Layer(self.rows, self.cols)
+        self.slope_layer.grid = image
+
+        # save river density
+        with h5py.File("density_grids/slope_density.h5", "w") as f:
+            f.create_dataset("slope_density", data=image)
+
+        return self.slope_layer
 
     def river_grid(self, plot=False, resolution=10):
         '''
@@ -302,7 +348,7 @@ class Grid_Layers:
             'palette': ['red', 'blue'],
         }
         # Create a water mask layer, and set the image mask so that non-water areas are transparent.
-        water_mask = occurrence.gt(20).selfMask()
+        water_mask = occurrence.gt(10).selfMask()
 
         # clip
         water_mask_clip = water_mask.clip(self.bounding_box)
@@ -358,18 +404,23 @@ class Grid_Layers:
 
         return self.river_layer
 
-    def combine_layers(self, tree_w, river_w):
+    def combine_layers(self, tree_w, river_w, slope_w, plot=False):
         '''
         Combine the two layers into a single grid using input weights
 
         Sum each array
         '''
 
-        self.total_grid = tree_w * self.tree_layer.grid + river_w*self.river_layer.grid
+        self.total_grid = tree_w * self.tree_layer.grid + river_w*self.river_layer.grid + slope_w*self.slope_layer.grid
 
         # save combined density
         with h5py.File("density_grids/combined_density.h5", "w") as f:
             f.create_dataset("combined_density", data=self.total_grid)
+
+        if plot:
+            fig, ax = plt.subplots()
+            ax.imshow(self.total_grid)
+            plt.show()
 
         return self.total_grid
 
