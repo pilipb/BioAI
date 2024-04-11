@@ -45,4 +45,4 @@ Other imaging done through Google Earth Engine.
 
 ## And running the route planning algorithm:
 
-![Step 6]()
+![Step 6](example_imgs/optimal_path_plot.jpg)
