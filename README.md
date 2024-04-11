@@ -1,8 +1,7 @@
-# BioAI
+# Canopy Guide - Bio-Inspired AI Solution
  
 A solution to sustainable forestry through bio-inspired route planning.
-
-The code creates a best route taking into account multiple layers:
+The code creates the best route from A to B taking into account multiple layers:
 
 ### Layers
 
