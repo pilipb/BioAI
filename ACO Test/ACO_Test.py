@@ -149,15 +149,15 @@ if __name__ == '__main__':
     # graph = np.random.randint(1, 6, (30, 30))
 
     # Start and end nodes
-    start_node = 478
-    end_node = 1958
+    start_node = 1409
+    end_node = 439
 
     # Get the row and column of the start and end nodes
     start_row, start_col = start_node // graph.shape[1], start_node % graph.shape[1]
     end_row, end_col = end_node // graph.shape[1], end_node % graph.shape[1]
 
     # Initialize and run the Ant Colony Optimization algorithm
-    ant_colony = AntColony(num_ants=10, graph=graph, start_node=start_node, end_node=end_node, alpha=0.5, beta=2, rho=0.5, q=100, max_iter=10, stop_percentage=0.5)
+    ant_colony = AntColony(num_ants=1000, graph=graph, start_node=start_node, end_node=end_node, alpha=0.5, beta=2, rho=0.5, q=100, max_iter=1000, stop_percentage=0.5)
     best_path, best_path_length_weight = ant_colony.find_path()
 
     # Save best path as a .h5 file
@@ -167,9 +167,6 @@ if __name__ == '__main__':
     # Plotting the final graph with the optimal path
     plt.figure(figsize=(10, 10))
     plt.imshow(graph, cmap='Blues')
-    # for i in range(graph.shape[0]):
-    #     for j in range(graph.shape[1]):
-    #         plt.text(j, i, str(graph[i, j]), color='blue', ha='center', va='center', fontsize=10)
     for i in range(len(best_path)-1):
         plt.plot([best_path[i] % graph.shape[1], best_path[i+1] % graph.shape[1]], [best_path[i] // graph.shape[1], best_path[i+1] // graph.shape[1]], color='red')
     plt.title('Optimal Path')
@@ -177,18 +174,8 @@ if __name__ == '__main__':
     # Plot the start and end nodes
     plt.plot(start_col, start_row, 'ro')
     plt.plot(end_col, end_row, 'rx')
-    # plt.colorbar(label='Weight')
-    # plt.grid(visible=True)
-    # plt.text(0, -2, f"Optimal path: {best_path}", fontsize=12)
-    # plt.text(0, -1.5, f"Optimal path length based on weights: {best_path_length_weight}", fontsize=12)
-    # plt.text(0, -1, f"Optimal path length based on distance: {ant_colony.best_path_length_distance}", fontsize=12)
     plt.savefig('ACO Test/optimal_path_plot.png', bbox_inches='tight')
 
     print(f"Optimal path: {best_path}")
     print(f"Optimal path length based on weights: {best_path_length_weight}")
     print(f"Optimal path length based on distance: {ant_colony.best_path_length_distance}")
-
-    # Create and save the animation
-    # all_ants_paths = ant_colony.ants_paths
-    # ani = FuncAnimation(plt.gcf(), animate, frames=len(all_ants_paths), interval=1000, repeat=False)
-    # ani.save('ACO Test/ant_colony_optimization.gif', writer='pillow', fps=1)
