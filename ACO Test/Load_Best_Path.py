@@ -48,6 +48,7 @@ plt.imshow(image)
 plt.plot(start_node % graph.shape[1] * x_size, start_node // graph.shape[1] * y_size, 'ro', markersize=10)
 plt.plot(end_node % graph.shape[1] * x_size, end_node // graph.shape[1] * y_size, 'bo', markersize=10)
 plt.savefig('ACO Test/optimal_path_plot.png', bbox_inches='tight')
+plt.savefig('example_imgs/optimal_path_plot.png', bbox_inches='tight') # for examples
 # plt.colorbar(label='Weight')
 # plt.grid(visible=True)
 # plt.text(0, -2, f"Optimal path: {best_path}", fontsize=12)
