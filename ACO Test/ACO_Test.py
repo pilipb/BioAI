@@ -67,7 +67,7 @@ class AntColony:
 
             # Save the best path and all paths every 10 iterations
             if iter % 10 == 0:
-                with h5py.File(f'ACO Test/Path Iteration Files/paths_iteration_{iter}.h5', 'w') as f:
+                with h5py.File(f'ACO Test/Path Iteration Files Anti Wiggle/paths_iteration_{iter}.h5', 'w') as f:
                     f.create_dataset('best_path', data=self.best_path)
                     f.create_dataset('best_path_length_weight', data=self.best_path_length_weight)
                     f.create_dataset('best_path_length_distance', data=self.best_path_length_distance)
@@ -148,8 +148,8 @@ if __name__ == '__main__':
         graph = f['combined_density'][:]
 
     # Start and end nodes
-    start_node = 5619
-    end_node = 1779
+    start_node = 5464
+    end_node = 1761
 
     # Get the row and column of the start and end nodes
     start_row, start_col = start_node // graph.shape[1], start_node % graph.shape[1]
