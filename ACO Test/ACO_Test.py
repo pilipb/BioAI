@@ -67,7 +67,7 @@ class AntColony:
 
             # Save the best path and all paths every 10 iterations
             if iter % 10 == 0:
-                with h5py.File(f'ACO Test/Path Iteration Files Anti Wiggle/paths_iteration_{iter}.h5', 'w') as f:
+                with h5py.File(f'ACO Test/Path Iteration Files Weight Distance/paths_iteration_{iter}.h5', 'w') as f:
                     f.create_dataset('best_path', data=self.best_path)
                     f.create_dataset('best_path_length_weight', data=self.best_path_length_weight)
                     f.create_dataset('best_path_length_distance', data=self.best_path_length_distance)
@@ -89,12 +89,14 @@ class AntColony:
                 next_node = self.choose_next_node(current_node, visited_nodes)
                 path_length_weight += self.graph[current_node // self.graph.shape[1], current_node % self.graph.shape[1]]
                 path_length_distance += self.distance[current_node][next_node]
+                path_length_weight += path_length_distance
                 visited_nodes.append(next_node)
                 path.append(next_node)
                 current_node = next_node
                 if len(visited_nodes) == self.num_nodes:
                     break  # break if all nodes are visited
             path_length_weight += self.graph[current_node // self.graph.shape[1], current_node % self.graph.shape[1]]
+            path_length_weight += self.distance[current_node][self.start_node]
             all_paths.append((path, (path_length_weight, path_length_distance)))
         return all_paths
 

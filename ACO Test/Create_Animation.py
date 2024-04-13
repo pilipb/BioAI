@@ -31,12 +31,16 @@ y_size = image.shape[0] / graph.shape[0]
 
 best_paths = []
 all_ants_paths = []
+best_paths_weight = []
+best_paths_distance = []
 # Loop through every tenth iteration
 for i in range(0, total_iterations, 10):
 
     # Open the file
     with h5py.File(f'ACO Test/Path Iteration Files/paths_iteration_{i}.h5', 'r') as f:
         best_paths.append(f['best_path'][:])
+        best_paths_weight.append(f['best_path_length_weight'][()])
+        best_paths_distance.append(f['best_path_length_distance'][()])
 
         ant_paths = []
         # Loop through every ant and store the path
@@ -44,6 +48,28 @@ for i in range(0, total_iterations, 10):
             ant_paths.append(f[f'ant_path_{j}'][:])
 
         all_ants_paths.append(ant_paths)
+
+# For loop for every iterations best weight and distance
+for i in range(len(best_paths_weight)):
+    print(f'Best path weight for iteration {i*10}: {best_paths_weight[i]}')
+    print(f'Best path distance for iteration {i*10}: {best_paths_distance[i]}')
+
+# Plot the best weights and distances for each iteration in a graph
+plt.figure(figsize=(8, 8))
+plt.plot(best_paths_weight, label='Best Path Weight')
+plt.ylabel('Weight')
+
+# Plot the best distances on the right y-axis
+plt.twinx()
+plt.plot(best_paths_distance, color='red', label='Best Path Distance')
+
+plt.title('Best Path Weight and Distance for each iteration')
+plt.xlabel('Iteration')
+plt.ylabel('Distance')
+plt.legend()
+plt.show()
+
+print(fhsdjfhjdsk)
 
 # Save each ant movement as an image
 for iteration in range(len(all_ants_paths)):
