@@ -9,7 +9,7 @@ with h5py.File('density_grids/combined_density.h5', 'r') as f:
     graph = f['combined_density'][:]
 
 # open tif image
-image_path = "/Users/philblecher/Desktop/Github/BioAI/test_imgs/download.tif"
+image_path = "/Users/aasav/OneDrive - University of Bristol\Documents/Eng Des/Year 5/BioAI/test_imgs/download.tif"
 image = rasterio.open(image_path)
 image = image.read()
 image = np.moveaxis(image, 0, -1)
@@ -17,7 +17,7 @@ image = np.moveaxis(image, 0, -1)
 image = image.squeeze()
 # plt.imshow(image)
 
-with h5py.File('ACO Test/Path Iteration Files/paths_iteration_30.h5', 'r') as f:
+with h5py.File('ACO Test/Path Iteration Files Weight Distance/paths_iteration_800.h5', 'r') as f:
     best_path = f['best_path'][:]
 #     ant_one = f['ant_path_0'][:]
 #     ant_two = f['ant_path_1'][:]
@@ -26,8 +26,8 @@ with h5py.File('ACO Test/Path Iteration Files/paths_iteration_30.h5', 'r') as f:
 # best_path = ant_two
 
 # Start and end nodes
-start_node = 5619
-end_node = 1779 #graph.shape[0] * graph.shape[1] - 1
+start_node = 5464
+end_node = 1761 #graph.shape[0] * graph.shape[1] - 1
 
 x_size = image.shape[1] / graph.shape[1]
 y_size = image.shape[0] / graph.shape[0]
