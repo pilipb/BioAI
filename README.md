@@ -5,10 +5,10 @@ The code creates the best route from A to B taking into account multiple layers:
 
 ### Layers
 
-- tree density
-- slope
-- rivers
-- habitat / species / biodiversity / age of tree
+- Tree density - implemented
+- Slope - implemented
+- Rivers - implemented
+- habitat / species / biodiversity / age of tree - TODO
 
 ## How?
 
@@ -18,7 +18,7 @@ The code creates the best route from A to B taking into account multiple layers:
 ## References
 Uses Deepforest: Weinstein, B.G.; Marconi, S.; Bohlman, S.; Zare, A.; White, E. Individual Tree-Crown Detection in RGB Imagery Using Semi-Supervised Deep Learning Neural Networks. Remote Sens. 2019, 11, 1309
 
-Other imaging done through Google Earth Engine.
+Other imaging done through Google Earth Engine API. https://developers.google.com/earth-engine/reference 
 
 # Example
 
